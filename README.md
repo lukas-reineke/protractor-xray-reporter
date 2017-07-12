@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/protractor-xray-reporter.svg)](https://badge.fury.io/js/protractor-xray-reporter)
+
 Generates [X-Ray for Jira](https://marketplace.atlassian.com/plugins/com.xpandit.plugins.xray/server/overview)
 test executions for protractor tests.
 
