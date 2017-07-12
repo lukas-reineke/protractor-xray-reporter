@@ -1,0 +1,29 @@
+{
+  "name": "protractor-xray-reporter",
+  "version": "1.0.0",
+  "description": "Xray reporter for Jasmin and Protractor",
+  "main": "xray-reporter.js",
+  "keywords": [
+    "jasmine",
+    "protractor",
+    "reporter",
+    "test",
+    "functional testing",
+    "end2end",
+    "jira",
+    "xray"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukas-reineke/protractor-xray-reporter"
+  },
+  "author": "Lukas Reineke <lukas.reineke@protonmail.com>",
+  "contributors": [
+    "Dimitri Rybak <kontakt@dimitri-rybak.de>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "popsicle": "^9.1.0",
+    "popsicle-basic-auth": "^1.0.0"
+  }
+}
