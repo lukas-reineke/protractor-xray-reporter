@@ -15,6 +15,7 @@ const XrayService = (options) => {
             .use(popsicle.plugins.parse('json'))
             .use(auth(options.jiraUser, options.jiraPassword))
             .then((res) => {
+                console.log('Pushed test execution to X-Ray');
                 callback();
             })
             .catch((error) => {

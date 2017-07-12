@@ -35,6 +35,10 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
         tests: []
     };
 
+    if (!options.hasOwnProperty('xrayUrl') || !options.hasOwnProperty('jiraPassword') || !options.hasOwnProperty('jiraUser')) {
+        throw new Error('required options are missing');
+    }
+
     browser.getProcessedConfig().then((config) => {
         result.info.summary = config.capabilities.name || 'no name';
         onPrepareDefer.fulfill();
