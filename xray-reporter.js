@@ -67,7 +67,7 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
 
             if (spec.status !== 'passed') {
                 result.tests[0].status = 'FAIL';
-                let comment;
+                let comment = '';
                 for (let expectation of spec.failedExpectations) {
                     comment += expectation.message;
                 }
