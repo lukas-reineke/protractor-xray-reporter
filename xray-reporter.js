@@ -51,6 +51,7 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
         result.tests.push({
             testKey: suite.description.split('@')[1],
             start: getDate(),
+            status: 'PASS',
             steps: []
         });
     };
