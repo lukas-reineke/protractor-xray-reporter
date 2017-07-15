@@ -1,6 +1,6 @@
 {
   "name": "protractor-xray-reporter",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Xray reporter for Jasmin and Protractor",
   "main": "xray-reporter.js",
   "keywords": [
