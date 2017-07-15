@@ -25,6 +25,11 @@ const getDate = () => {
 };
 
 const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
+
+    if (!options.hasOwnProperty('xrayUrl') || !options.hasOwnProperty('jiraPassword') || !options.hasOwnProperty('jiraUser')) {
+        throw new Error('required options are missing');
+    }
+
     const XrayService = require('./xray-service')(options);
 
     let result = {
@@ -34,10 +39,6 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
         },
         tests: []
     };
-
-    if (!options.hasOwnProperty('xrayUrl') || !options.hasOwnProperty('jiraPassword') || !options.hasOwnProperty('jiraUser')) {
-        throw new Error('required options are missing');
-    }
 
     browser.getProcessedConfig().then((config) => {
         result.info.summary = config.capabilities.name || 'no name';
@@ -51,7 +52,6 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
         result.tests.push({
             testKey: suite.description.split('@')[1],
             start: getDate(),
-            status: 'PASS',
             steps: []
         });
     };
@@ -63,15 +63,26 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
     };
 
     this.specDone = (spec) => {
+        const testKey = spec.fullName.split('@')['1'].split(' ')[0];
+        let index;
+        result.tests.forEach((test, i) => {
+            if (test.testKey === testKey) {
+                index = i;
+            }
+        });
+
         if (spec.status === 'disabled') {
-            result.tests[0].steps.push({});
+            result.tests[index].steps.push({
+                status: 'TODO',
+                id: spec.id
+            });
             specPromisesResolve[spec.id]();
         } else {
 
             let specResult;
 
             if (spec.status !== 'passed') {
-                result.tests[0].status = 'FAIL';
+                result.tests[index].status = 'FAIL';
                 let comment = '';
                 for (let expectation of spec.failedExpectations) {
                     comment += expectation.message;
@@ -79,12 +90,15 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                 specResult = {
                     status: 'FAIL',
                     comment,
-                    evidences: []
+                    evidences: [],
+                    id: spec.id
                 };
             } else {
+                result.tests[index].status !== 'FAIL' ? result.tests[index].status = 'PASS' : 'FAIL';
                 specResult = {
                     status: 'PASS',
-                    evidences: []
+                    evidences: [],
+                    id: spec.id
                 };
             }
 
@@ -103,20 +117,40 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                 }));
 
                 Promise.all(specDonePromises).then(() => {
-                    result.tests[0].steps.push(specResult);
+                    result.tests[index].steps.push(specResult);
                     specPromisesResolve[spec.id]();
                 });
 
             } else {
-                result.tests[0].steps.push(specResult);
+                result.tests[index].steps.push(specResult);
                 specPromisesResolve[spec.id]();
             }
         }
     };
 
     this.suiteDone = (suite) => {
-        result.tests[0].finish = getDate();
+        const testKey = suite.description.split('@')[1];
+        for (let test of result.tests) {
+            if (test.testKey === testKey) {
+                test.finish = getDate();
+                test.steps.sort((a, b) => {
+                    return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
+                });
+                for (let step of test.steps) {
+                    step.id = undefined;
+                }
+                break;
+            }
+        }
+    };
+
+    this.jasmineDone = () => {
         Promise.all(specPromises).then(() => {
+            for (let i = result.tests.length - 1; i >= 0; i--) {
+                if (!result.tests[i].status) {
+                    result.tests.splice(i, 1);
+                }
+            }
             XrayService.createExecution(result, () => {
                 onCompleteDefer.fulfill();
             });
