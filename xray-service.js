@@ -12,11 +12,14 @@ const XrayService = (options) => {
                 'Content-Type': 'application/json'
             }
         })
-            .use(popsicle.plugins.parse('json'))
             .use(auth(options.jiraUser, options.jiraPassword))
             .then((res) => {
-                console.log('Pushed test execution to X-Ray');
-                callback();
+                if (res.status !== 200) {
+                    throw new Error(res.body);
+                } else {
+                    console.log('Pushed test execution to X-Ray');
+                    callback();
+                }
             })
             .catch((error) => {
                 throw new Error(error);

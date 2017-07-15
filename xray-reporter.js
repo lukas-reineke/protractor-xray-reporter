@@ -1,24 +1,26 @@
+const fs = require('fs');
+
 const getDate = () => {
     const date = new Date();
     const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
     let tz = (utc - date.getTime()) / (60 * 60 * 1000);
 
     switch (true) {
-        case (tz === 0):
-            tz = '+00:00';
-            break;
-        case (tz < 9 && tz > 0):
-            tz = '+0' + tz + ':00';
-            break;
-        case (tz > -9 && tz < 0):
-            tz = '-0' + Math.abs(tz) + ':00';
-            break;
-        case (tz > 9):
-            tz = '+' + tz + ':00';
-            break;
-        default:
-            tz = tz + ':00';
-            break;
+    case (tz === 0):
+        tz = '+00:00';
+        break;
+    case (tz < 9 && tz > 0):
+        tz = '+0' + tz + ':00';
+        break;
+    case (tz > -9 && tz < 0):
+        tz = '-0' + Math.abs(tz) + ':00';
+        break;
+    case (tz > 9):
+        tz = '+' + tz + ':00';
+        break;
+    default:
+        tz = tz + ':00';
+        break;
     }
 
     return date.toISOString().split('.')[0] + tz;
@@ -29,6 +31,23 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
     if (!options.hasOwnProperty('xrayUrl') || !options.hasOwnProperty('jiraPassword') || !options.hasOwnProperty('jiraUser')) {
         throw new Error('required options are missing');
     }
+
+    const buildImageName = (specId) => {
+        let imageName = './';
+        imageName += browser.params.imageComparison.diffFolder;
+        imageName += '/';
+        imageName += specId;
+        imageName += '-';
+        imageName += browser.params.imageComparison.browserName;
+        imageName += '-';
+        imageName += browser.params.imageComparison.browserWidth;
+        imageName += 'x';
+        imageName += browser.params.imageComparison.browserHeight;
+        imageName += '-dpr-';
+        imageName += browser.params.imageComparison.devicePixelRatio;
+        imageName += '.png';
+        return imageName;
+    };
 
     const XrayService = require('./xray-service')(options);
 
@@ -116,6 +135,24 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                     });
                 }));
 
+                const specId = spec.description.split('@')[1];
+                if (browser.params.imageComparison && specId && fs.existsSync(buildImageName(specId))) {
+                    specDonePromises.push(new Promise((resolve) => {
+                        fs.readFile(buildImageName(specId), (error, png) => {
+                            if (error) {
+                                throw new Error(error);
+                            } else {
+                                specResult.evidences.push({
+                                    data: new Buffer(png).toString('base64'),
+                                    filename: 'diff.png',
+                                    contentType: 'image/png'
+                                });
+                                resolve();
+                            }
+                        });
+                    }));
+                }
+
                 Promise.all(specDonePromises).then(() => {
                     result.tests[index].steps.push(specResult);
                     specPromisesResolve[spec.id]();
@@ -133,12 +170,6 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
         for (let test of result.tests) {
             if (test.testKey === testKey) {
                 test.finish = getDate();
-                test.steps.sort((a, b) => {
-                    return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
-                });
-                for (let step of test.steps) {
-                    step.id = undefined;
-                }
                 break;
             }
         }
@@ -149,6 +180,13 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
             for (let i = result.tests.length - 1; i >= 0; i--) {
                 if (!result.tests[i].status) {
                     result.tests.splice(i, 1);
+                } else {
+                    result.tests[i].steps.sort((a, b) => {
+                        return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
+                    });
+                    for (let step of result.tests[i].steps) {
+                        step.id = undefined;
+                    }
                 }
             }
             XrayService.createExecution(result, () => {

@@ -73,6 +73,11 @@ exports.config = {
  - `fail`   only attach screenshots if the test failed
  - `always` always attach screenshots
 
+ protractor-xray-reporter can work with
+ [wswebcreation/protractor-image-comparison](https://github.com/wswebcreation/protractor-image-comparison).
+ If you have protractor-image-comparison configured, the comparison images will also be
+ uploaded.
+
 * `version`
 
  You can attach a version to the execution.
@@ -93,6 +98,10 @@ symbol.
 
 A test step is represented by an it block.
 
+If you want to use image comparison, the tag has to be added to the name of the
+test step with an @ symbol. You can use any tag you like, as long as it is
+unique and has no spaces.
+
 ```javascript
 describe('test set description @ABC-1', function() {
 
@@ -100,8 +109,9 @@ describe('test set description @ABC-1', function() {
         expect(2).toEqual(2);
     });
 
-    it('should do something else', function() {
+    it('should do something else @123', function() {
         expect(3).toEqual(3);
+        expect(browser.params.imageComparison.checkElement((element), '123')).toBeLessThan(3.5);
     });
 
 });
