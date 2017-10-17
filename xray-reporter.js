@@ -200,6 +200,8 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
             });
         });
     };
+
+    return this;
 };
 
 module.exports = XrayReporter;
