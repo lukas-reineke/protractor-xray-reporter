@@ -26,6 +26,10 @@ const getDate = () => {
     return date.toISOString().split('.')[0] + tz;
 };
 
+const getTestKey = (test) => {
+    return test.split('@')['1'].split(' ')[0]
+}
+
 const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
 
     if (!options.hasOwnProperty('xrayUrl') || !options.hasOwnProperty('jiraPassword') || !options.hasOwnProperty('jiraUser')) {
@@ -68,11 +72,15 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
     let specPromisesResolve = {};
 
     this.suiteStarted = (suite) => {
-        result.tests.push({
-            testKey: suite.description.split('@')[1],
+        let test = {
+            testKey: getTestKey(suite.description),
             start: getDate(),
-            steps: []
-        });
+            steps: [],
+        }
+        if (options.hasOwnProperty('testComment')) {
+            test.comment = options.testComment;
+        }
+        result.tests.push(test);
     };
 
     this.specStarted = (spec) => {
@@ -82,7 +90,7 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
     };
 
     this.specDone = (spec) => {
-        const testKey = spec.fullName.split('@')['1'].split(' ')[0];
+        const testKey = getTestKey(spec.fullName);
         let index;
         result.tests.forEach((test, i) => {
             if (test.testKey === testKey) {
@@ -135,7 +143,7 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                     });
                 }));
 
-                const specId = spec.description.split('@')[1];
+                const specId = getTestKey(spec.description);
                 if (browser.params.imageComparison && specId && fs.existsSync(buildImageName(specId))) {
                     specDonePromises.push(new Promise((resolve) => {
                         fs.readFile(buildImageName(specId), (error, png) => {
@@ -166,7 +174,7 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
     };
 
     this.suiteDone = (suite) => {
-        const testKey = suite.description.split('@')[1];
+        const testKey = getTestKey(suite.description);
         for (let test of result.tests) {
             if (test.testKey === testKey) {
                 test.finish = getDate();
@@ -177,15 +185,17 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
 
     this.jasmineDone = () => {
         Promise.all(specPromises).then(() => {
-            result.tests = result.tests.filter((test) => {
-                return !!test.status;
-            });
-            for (let test of result.tests) {
-                test.steps.sort((a, b) => {
-                    return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
-                }).forEach((step) => {
-                    delete step.id;
-                });
+            for (let i = result.tests.length - 1; i >= 0; i--) {
+                if (!result.tests[i].status) {
+                    result.tests.splice(i, 1);
+                } else {
+                    result.tests[i].steps.sort((a, b) => {
+                        return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
+                    });
+                    for (let step of result.tests[i].steps) {
+                        step.id = undefined;
+                    }
+                }
             }
             XrayService.createExecution(result, () => {
                 onCompleteDefer.fulfill();
