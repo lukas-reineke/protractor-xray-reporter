@@ -185,25 +185,21 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
 
     this.jasmineDone = () => {
         Promise.all(specPromises).then(() => {
-            for (let i = result.tests.length - 1; i >= 0; i--) {
-                if (!result.tests[i].status) {
-                    result.tests.splice(i, 1);
-                } else {
-                    result.tests[i].steps.sort((a, b) => {
-                        return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
-                    });
-                    for (let step of result.tests[i].steps) {
-                        step.id = undefined;
-                    }
-                }
+            result.tests = result.tests.filter((test) => {
+                return !!test.status;
+            });
+            for (let test of result.tests) {
+                test.steps.sort((a, b) => {
+                    return parseInt(a.id.replace('spec', '')) - parseInt(b.id.replace('spec', ''));
+                }).forEach((step) => {
+                    delete step.id;
+                });
             }
             XrayService.createExecution(result, () => {
                 onCompleteDefer.fulfill();
             });
         });
     };
-
-    return this;
 };
 
 module.exports = XrayReporter;
