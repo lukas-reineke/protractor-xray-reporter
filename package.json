@@ -1,5 +1,5 @@
 {
-  "name": "protractor-xray-reporter1",
+  "name": "protractor-xray-reporter",
   "version": "1.0.5",
   "description": "Xray reporter for Jasmin and Protractor",
   "main": "xray-reporter.js",
@@ -15,9 +15,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/nils-hoyer/protractor-xray-reporter"
+    "url": "https://github.com/lukas-reineke/protractor-xray-reporter"
   },
-  "author": "Nils Hoyer",
+  "author": "Lukas Reineke <lukas.reineke@protonmail.com>",
+  "contributors": [
+    "Dimitri Rybak <kontakt@dimitri-rybak.de>"
+  ],
   "license": "MIT",
   "dependencies": {
     "popsicle": "^9.1.0",
