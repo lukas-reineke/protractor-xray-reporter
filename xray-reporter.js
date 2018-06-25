@@ -61,7 +61,11 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
 
     browser.getProcessedConfig().then((config) => {
         result.info.summary = config.capabilities.name || 'no name';
-        onPrepareDefer.fulfill();
+        if(onPrepareDefer.resolve){
+            onPrepareDefer.resolve();
+        } else {
+            onPrepareDefer.fulfill();
+        }
     });
 
     let specPromises = [];
@@ -188,7 +192,11 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                 });
             }
             XrayService.createExecution(result, () => {
-                onCompleteDefer.fulfill();
+                if(onCompleteDefer.resolve){
+                    onCompleteDefer.resolve();
+                } else {
+                    onCompleteDefer.fulfill();
+                }
             });
         });
     };
