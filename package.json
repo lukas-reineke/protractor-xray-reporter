@@ -23,7 +23,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "popsicle": "^10.0.1",
+    "popsicle": "^11.0.3",
     "popsicle-basic-auth": "^1.0.0"
   }
 }
