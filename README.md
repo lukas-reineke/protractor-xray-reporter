@@ -3,6 +3,12 @@
 Generates [X-Ray for Jira](https://marketplace.atlassian.com/plugins/com.xpandit.plugins.xray/server/overview)
 test executions for protractor tests.
 
+# Help wanted
+
+I don't have access to a Jira install anymore which makes testing impossible.
+If someone wants to help out, I can give you access to the repo.
+
+There won't be any updates until I find someone.
 
 # How to use
 
