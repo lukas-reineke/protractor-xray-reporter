@@ -51,11 +51,13 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
 
     const XrayService = require('./xray-service')(options);
 
+    const defaultInfo = {
+        description: options.description,
+        version: options.version
+    }
+
     let result = {
-        info: {
-            description: options.description,
-            version: options.version
-        },
+        info: options.info ? options.info : defaultInfo,
         tests: []
     };
 
