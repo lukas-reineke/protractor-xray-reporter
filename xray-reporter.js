@@ -125,8 +125,8 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                 };
             }
 
-            if ((specResult.status === 'FAIL' && options.screenshot !== 'never') || options.screenshot === 'always') {
-                let specDonePromises = [];
+            let specDonePromises = [];
+            if ((specResult.status === 'FAIL' && options.screenshot !== 'never') || options.screenshot === 'always') {    
 
                 specDonePromises.push(new Promise((resolve) => {
                     browser.takeScreenshot().then((png) => {
@@ -156,16 +156,24 @@ const XrayReporter = (options, onPrepareDefer, onCompleteDefer, browser) => {
                         });
                     }));
                 }
-
-                Promise.all(specDonePromises).then(() => {
-                    result.tests[index].steps.push(specResult);
-                    specPromisesResolve[spec.id]();
-                });
-
-            } else {
+            }
+            if ((specResult.status === 'FAIL' && options.sendLog !== 'never') || options.sendLog === 'always') {
+            
+                specDonePromises.push(new Promise((resolve) => {
+                    browser.manage().logs().get('browser').then((browserLog) => {
+                        specResult.evidences.push({
+                            data:  Buffer.from(JSON.stringify(browserLog)).toString("base64"),
+                            filename: 'consoleLog.txt',
+                            contentType: 'application/json'
+                        });
+                        resolve();
+                    });
+                }));
+            }
+            Promise.all(specDonePromises).then(() => {
                 result.tests[index].steps.push(specResult);
                 specPromisesResolve[spec.id]();
-            }
+            });
         }
     };
 
